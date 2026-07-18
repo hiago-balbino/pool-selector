@@ -1,0 +1,157 @@
+"""Integration tests for `RefreshTask`.
+
+Covers the error-handling contract: on source failure, the previous valid
+aggregate is kept intact, freshness does not advance, and the process must
+not crash.
+"""
+
+import json
+from collections.abc import Iterator
+from datetime import UTC, datetime, timedelta
+
+from pool_selector.domain.models import PoolId
+from pool_selector.domain.recency import SlidingWindowStrategy
+from pool_selector.ingestion.source import DataSource
+from pool_selector.store.refresh import RefreshTask
+from pool_selector.store.stats_store import InMemoryStore
+
+
+def _line(job_id: str, minutes_ago: float, reason: str | None) -> str:
+    """Build a raw NDJSON line whose `finished_at` is relative to wall-clock
+    "now", so it always falls inside RefreshTask's real-time recency window
+    regardless of when the test suite happens to run."""
+    finished_at = datetime.now(UTC) - timedelta(minutes=minutes_ago)
+    return json.dumps(
+        {
+            "finished_at": finished_at.isoformat(),
+            "job_id": job_id,
+            "pool_id": "pool-r6.xlarge-us-east-1a",
+            "status": "FAILED" if reason else "SUCCESS",
+            "reason": reason,
+        }
+    )
+
+
+VALID_LINE = _line("job-1", minutes_ago=5, reason="SPOT_INSTANCE_TERMINATION")
+VALID_LINE_2 = _line("job-2", minutes_ago=2, reason=None)
+
+
+class _WorkingSource:
+    """DataSource fake that yields a fixed set of valid NDJSON lines."""
+
+    def __init__(self, lines: list[str]) -> None:
+        self._lines = lines
+
+    def iter_events(self) -> Iterator[str]:
+        yield from self._lines
+
+
+class _FailingSource:
+    """DataSource fake simulating an unavailable source (S3/local down)."""
+
+    def iter_events(self) -> Iterator[str]:
+        raise ConnectionError("simulated data source outage")
+        yield  # pragma: no cover - unreachable, satisfies generator typing
+
+
+def _recency() -> SlidingWindowStrategy:
+    return SlidingWindowStrategy(window_minutes=60)
+
+
+def test_run_once_success_updates_the_store_stats() -> None:
+    store = InMemoryStore()
+    task = RefreshTask(
+        source=_WorkingSource([VALID_LINE, VALID_LINE_2]),
+        store=store,
+        recency=_recency(),
+        interval_seconds=60,
+    )
+
+    task.run_once()
+
+    stats = store.get_stats()
+    pool_id = PoolId.parse("pool-r6.xlarge-us-east-1a")
+    assert stats[pool_id].total_events == 2
+    assert stats[pool_id].availability_failures == 1
+
+
+def test_run_once_success_advances_freshness() -> None:
+    store = InMemoryStore()
+    task = RefreshTask(
+        source=_WorkingSource([VALID_LINE]),
+        store=store,
+        recency=_recency(),
+        interval_seconds=60,
+    )
+
+    task.run_once()
+
+    assert store.get_freshness() is not None
+
+
+def test_run_once_with_failing_source_keeps_previous_aggregate_intact() -> None:
+    store = InMemoryStore()
+    successful_task = RefreshTask(
+        source=_WorkingSource([VALID_LINE]),
+        store=store,
+        recency=_recency(),
+        interval_seconds=60,
+    )
+    successful_task.run_once()
+    previous_stats = dict(store.get_stats())
+
+    failing_task = RefreshTask(
+        source=_FailingSource(), store=store, recency=_recency(), interval_seconds=60
+    )
+    failing_task.run_once()
+
+    assert store.get_stats() == previous_stats
+
+
+def test_run_once_with_failing_source_does_not_advance_freshness() -> None:
+    store = InMemoryStore()
+    successful_task = RefreshTask(
+        source=_WorkingSource([VALID_LINE]),
+        store=store,
+        recency=_recency(),
+        interval_seconds=60,
+    )
+    successful_task.run_once()
+    previous_freshness = store.get_freshness()
+
+    failing_task = RefreshTask(
+        source=_FailingSource(), store=store, recency=_recency(), interval_seconds=60
+    )
+    failing_task.run_once()
+
+    assert store.get_freshness() == previous_freshness
+
+
+def test_run_once_with_failing_source_does_not_raise() -> None:
+    store = InMemoryStore()
+    task = RefreshTask(
+        source=_FailingSource(), store=store, recency=_recency(), interval_seconds=60
+    )
+
+    task.run_once()  # must not raise -- test fails if an exception propagates
+
+
+def test_run_once_with_failing_source_on_first_ever_refresh_leaves_freshness_none() -> None:
+    """No prior successful refresh exists yet -- freshness must remain None,
+    not just "unchanged", so /ready correctly reports not-ready."""
+    store = InMemoryStore()
+    task = RefreshTask(
+        source=_FailingSource(), store=store, recency=_recency(), interval_seconds=60
+    )
+
+    task.run_once()
+
+    assert store.get_freshness() is None
+    assert store.get_stats() == {}
+
+
+def test_data_source_protocol_conformance_of_test_fakes() -> None:
+    """Sanity check that the fakes used above genuinely satisfy the port
+    RefreshTask depends on, not an incidental duck-typed coincidence."""
+    assert isinstance(_WorkingSource([]), DataSource)
+    assert isinstance(_FailingSource(), DataSource)
