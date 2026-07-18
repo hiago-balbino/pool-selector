@@ -13,9 +13,16 @@ COPY pyproject.toml uv.lock ./
 RUN uv sync --frozen --no-dev --no-install-project
 
 COPY src ./src
+COPY tools ./tools
 COPY README.md ./
 RUN uv sync --frozen --no-dev
 
+COPY docker-entrypoint.sh ./
+RUN chmod +x docker-entrypoint.sh
+
+# Informational default -- the actual bound port is read from $PORT at
+# container start (docker-entrypoint.sh), so platforms that assign their own
+# port (e.g. Render) work without a Dockerfile change.
 EXPOSE 5050
 
-CMD ["uv", "run", "--no-sync", "uvicorn", "pool_selector.api.app:app", "--host", "0.0.0.0", "--port", "5050"]
+ENTRYPOINT ["./docker-entrypoint.sh"]
