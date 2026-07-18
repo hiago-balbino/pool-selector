@@ -83,3 +83,17 @@ def test_malformed_line_logs_warning_instead_of_raising(
 
     assert result is None
     assert any(record.levelno == logging.WARNING for record in caplog.records)
+
+
+def test_finished_at_with_wrong_type_returns_none_without_raising() -> None:
+    """`finished_at` present but not a string (e.g. a JSON number) makes
+    `datetime.fromisoformat` raise TypeError rather than ValueError -- the
+    parser must catch that too and skip the line, not propagate."""
+    line = (
+        '{"finished_at": 1234567890, "job_id": "job-1", '
+        '"pool_id": "pool-r6.xlarge-us-east-1a", "status": "FAILED"}'
+    )
+
+    result = parse_line(line)
+
+    assert result is None

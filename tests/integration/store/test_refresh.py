@@ -5,9 +5,12 @@ aggregate is kept intact, freshness does not advance, and the process must
 not crash.
 """
 
+import asyncio
 import json
 from collections.abc import Iterator
 from datetime import UTC, datetime, timedelta
+
+import pytest
 
 from pool_selector.domain.models import PoolId
 from pool_selector.domain.recency import SlidingWindowStrategy
@@ -155,3 +158,36 @@ def test_data_source_protocol_conformance_of_test_fakes() -> None:
     RefreshTask depends on, not an incidental duck-typed coincidence."""
     assert isinstance(_WorkingSource([]), DataSource)
     assert isinstance(_FailingSource(), DataSource)
+
+
+class _CountingSource:
+    """DataSource fake that records how many times it was iterated, to prove
+    `start()`'s loop body actually re-runs `run_once` on every tick rather
+    than executing it once and idling."""
+
+    def __init__(self) -> None:
+        self.call_count = 0
+
+    def iter_events(self) -> Iterator[str]:
+        self.call_count += 1
+        yield from [VALID_LINE]
+
+
+@pytest.mark.asyncio
+async def test_start_runs_run_once_repeatedly_on_every_interval_tick() -> None:
+    store = InMemoryStore()
+    source = _CountingSource()
+    task = RefreshTask(source=source, store=store, recency=_recency(), interval_seconds=0)
+
+    background = asyncio.create_task(task.start())
+    try:
+        for _ in range(50):
+            await asyncio.sleep(0)
+            if source.call_count >= 3:
+                break
+    finally:
+        background.cancel()
+        with pytest.raises(asyncio.CancelledError):
+            await background
+
+    assert source.call_count >= 3

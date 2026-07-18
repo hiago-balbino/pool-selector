@@ -7,7 +7,8 @@ test:
 	uv run pytest --cov=src --cov-report=term-missing
 
 run:
-	@echo "make run: placeholder — replaced once the FastAPI app exists"
+	uv sync
+	uv run uvicorn pool_selector.api.app:app --host 0.0.0.0 --port 5050
 
 docker-up:
-	@echo "make docker-up: placeholder — replaced once Dockerfile/docker-compose.yml exist"
+	docker compose up --build

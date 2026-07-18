@@ -1,0 +1,13 @@
+services:
+  api:
+    build: .
+    ports:
+      - "5050:5050"
+    environment:
+      DATA_SOURCE: local
+      LOCAL_DATA_DIR: /app/data
+      RECENCY_WINDOW_MINUTES: "60"
+      LOW_CONFIDENCE_THRESHOLD: "5"
+      REFRESH_INTERVAL_SECONDS: "60"
+    volumes:
+      - ./data:/app/data:ro
