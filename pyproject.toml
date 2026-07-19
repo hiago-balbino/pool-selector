@@ -1,7 +1,7 @@
 [project]
 name = "pool-selector"
 version = "0.1.0"
-description = "Add your description here"
+description = "Recommends the EC2 spot instance pool least likely to terminate, from historical job execution events"
 readme = "README.md"
 requires-python = ">=3.14"
 dependencies = [
