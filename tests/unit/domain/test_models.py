@@ -30,6 +30,7 @@ def test_pool_id_parse_multi_segment_az() -> None:
     pool_id = PoolId.parse("pool-c5.large-eu-central-1a")
 
     assert pool_id.instance_type == "c5.large"
+    assert pool_id.family == "c5"
     assert pool_id.az == "eu-central-1a"
 
 
@@ -38,6 +39,7 @@ def test_pool_id_parse_family_derivation_different_instance_type() -> None:
 
     assert pool_id.instance_type == "m5.2xlarge"
     assert pool_id.family == "m5"
+    assert pool_id.az == "us-west-2a"
 
 
 def test_pool_id_parse_malformed_raises_handled_error_not_generic_exception() -> None:
@@ -61,6 +63,7 @@ def test_job_event_construction() -> None:
     assert event.pool_id == "pool-r6.xlarge-us-east-1c"
     assert event.status == "FAILED"
     assert event.reason == "SPOT_INSTANCE_TERMINATION"
+    assert event.finished_at.__str__() == "2026-07-17 12:00:00+00:00"
 
 
 def test_pool_stats_construction() -> None:

@@ -111,7 +111,7 @@ def test_recent_events_counts_successes_within_the_window() -> None:
     failure" signal, distinct from total_events."""
     events = [
         _event("pool-r6.xlarge-us-east-1a", reason="SPOT_INSTANCE_TERMINATION", job_id="fail"),
-        _event("pool-r6.xlarge-us-east-1a", reason=None, job_id="ok-1"),
+        _event("pool-r6.xlarge-us-east-1a", reason="TIMED_OUT", job_id="fail-1"),
         _event("pool-r6.xlarge-us-east-1a", reason=None, job_id="ok-2"),
     ]
     strategy = SlidingWindowStrategy(window_minutes=60)
