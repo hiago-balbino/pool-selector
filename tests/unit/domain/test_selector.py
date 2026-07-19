@@ -56,12 +56,9 @@ def test_no_eligible_pool_returns_empty_list() -> None:
 
 
 def test_ranking_prioritizes_confidence_score_wilson_over_raw_score() -> None:
-    """Non-shallow proof that ranking is driven by confidence_score, not raw_score.
-
-    small_perfect has a higher raw_score (1.0, 0 failures) but a much smaller
-    sample; large_reliable has a lower raw_score (0.95) but a huge sample. The
-    Wilson lower bound favors the large reliable pool -- a naive
-    raw_score-based ranking would get this backwards.
+    """small_perfect has a higher raw_score (1.0, 0 failures) but a much smaller
+    sample. large_reliable has a lower raw_score (0.95) but a huge sample. The
+    Wilson lower bound favors the large reliable pool.
     """
     small_perfect = _stats("pool-r6.xlarge-us-east-1a", 10, 0, 10)
     large_reliable = _stats("pool-r6.2xlarge-us-east-1b", 1000, 50, 1000)
@@ -72,7 +69,6 @@ def test_ranking_prioritizes_confidence_score_wilson_over_raw_score() -> None:
         "pool-r6.2xlarge-us-east-1b",
         "pool-r6.xlarge-us-east-1a",
     ]
-    # Displayed `score` still reports the intuitive raw_score value.
     assert result[0].score == 0.95
     assert result[1].score == 1.0
 

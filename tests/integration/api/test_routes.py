@@ -1,12 +1,4 @@
-"""Integration/e2e tests for `GET /get-pools`.
-
-Each edge case gets its own dedicated test (no shared shallow test).
-
-Stats are seeded directly into the `InMemoryStore` *after* the app's
-`TestClient` lifespan startup has run (which performs its own, empty,
-refresh cycle) -- this decouples route-level assertions from refresh/ingestion
-timing, which is already covered by `tests/integration/store/test_refresh.py`.
-"""
+"""Integration/e2e tests for `GET /get-pools`."""
 
 from __future__ import annotations
 
@@ -24,7 +16,7 @@ from pool_selector.store.stats_store import InMemoryStore
 
 
 class _EmptySource:
-    """DataSource fake with nothing to yield -- refresh always aggregates to {}."""
+    """DataSource fake with nothing to yield. Refresh always aggregates to {}."""
 
     def iter_events(self) -> Iterator[str]:
         return iter(())

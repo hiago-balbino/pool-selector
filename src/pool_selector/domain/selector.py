@@ -12,8 +12,6 @@ from pool_selector.domain.scoring import confidence_score, raw_score
 
 @dataclass(frozen=True)
 class PoolFilter:
-    """Optional eligibility filter dimensions for `select_best_pools`."""
-
     instance_type: str | None = None
     family: str | None = None
     category: WorkloadCategory | None = None
@@ -48,9 +46,7 @@ def select_best_pools(
     low_confidence_threshold: int = 5,
     window_description: str = "unknown",
 ) -> list[RankedPool]:
-    """Filter, rank and tie-break pools, returning up to `top_n` results.
-
-    Ranking is primarily by Wilson lower bound confidence (`confidence_score`),
+    """Ranking is primarily by Wilson lower bound confidence (`confidence_score`),
     which already resolves raw failure-rate ties by favoring larger samples.
     Remaining exact ties are broken by recent activity, then by a seeded
     deterministic factor for load distribution across statistically
@@ -65,12 +61,12 @@ def select_best_pools(
 
     results = [
         RankedPool(
-            pool_id=s.pool_id,
-            score=raw_score(s),
-            sample_size=s.total_events,
-            confidence="low" if s.total_events < low_confidence_threshold else "normal",
+            pool_id=stats.pool_id,
+            score=raw_score(stats),
+            sample_size=stats.total_events,
+            confidence="low" if stats.total_events < low_confidence_threshold else "normal",
             window=window_description,
         )
-        for s in ranked_stats
+        for stats in ranked_stats
     ]
     return results[:top_n]

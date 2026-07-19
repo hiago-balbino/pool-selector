@@ -1,8 +1,4 @@
-"""Unit tests for the instance catalog.
-
-Covers the AWS naming convention fallback (c=compute, r=memory, m=general,
-i=storage, t=burstable) for families absent from the catalog.
-"""
+"""Unit tests for the instance catalog."""
 
 import pytest
 
@@ -26,7 +22,6 @@ def test_category_for_family_returns_explicit_catalog_entry() -> None:
 def test_category_for_family_falls_back_by_first_letter_when_absent_from_catalog(
     family: str, expected: WorkloadCategory
 ) -> None:
-    """`family` is deliberately not in the static catalog, forcing the fallback path."""
     assert category_for_family(family) == expected
 
 

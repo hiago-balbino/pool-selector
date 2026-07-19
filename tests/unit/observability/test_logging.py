@@ -26,7 +26,7 @@ def _emit_and_capture(
 def test_emitted_log_line_is_valid_json() -> None:
     line = _emit_and_capture()
 
-    json.loads(line)  # must not raise -- test fails if this is not parseable JSON
+    json.loads(line)  # Test fails if this is not parseable JSON
 
 
 def test_emitted_log_line_has_required_fields() -> None:

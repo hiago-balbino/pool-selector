@@ -1,15 +1,14 @@
 """Deterministic synthetic data generator.
 
-Produces NDJSON `JobEvent` records (one per line), partitioned into
+Produces JSON `JobEvent` records (one per line), partitioned into
 `dt=YYYY-MM-DD/hr=HH/events.json` files under `--output-dir`, mimicking the
-date/hour-partitioned layout of a real S3 bucket. Reuses `PoolId`'s format so
-the output is guaranteed to parse cleanly via `ingestion/parser.py`.
+date/hour-partitioned layout of a real S3 bucket.
 
 Determinism: every random choice is drawn from a single `random.Random(seed)`
 instance in a fixed order, so the same `--seed` always yields the same
 sequence of events. The only external input is the "today" anchor date
 (`--as-of`, defaulting to the current UTC date), which controls how far back
-`--days` reaches -- output content itself never depends on wall-clock time.
+`--days` reaches. Output content itself never depends on wall-clock time.
 """
 
 from __future__ import annotations
@@ -47,8 +46,7 @@ _AZ_BASE_FAILURE_RATE = {
     "us-east-1c": 0.30,
 }
 
-# reason -> relative weight among failed events (SPOT_INSTANCE_TERMINATION
-# dominates, matching this feature's availability-failure category.
+# reason -> relative weight among failed events.
 _FAILURE_REASON_WEIGHTS = {
     "SPOT_INSTANCE_TERMINATION": 0.7,
     "TIMED_OUT": 0.2,
@@ -66,8 +64,6 @@ def _pool_ids() -> list[str]:
 
 @dataclass(frozen=True)
 class _PoolProfile:
-    """Per-pool generation parameters (uneven volume + AZ-driven failure rate)."""
-
     pool_id: str
     az: str
     volume_weight: float
@@ -75,7 +71,6 @@ class _PoolProfile:
 
 
 def _build_profiles(rng: Random) -> list[_PoolProfile]:
-    """Build one profile per pool_id, weighted for uneven volume across pools."""
     profiles = []
     for pool_id in _pool_ids():
         parsed = PoolId.parse(pool_id)
@@ -103,11 +98,7 @@ def generate_events(
     days: int,
     as_of: date,
 ) -> list[dict[str, str | None]]:
-    """Generate `num_events` synthetic events spread across `days` days ending `as_of`.
-
-    Pure function of its arguments -- no wall-clock reads -- so the same
-    arguments always produce the same event sequence.
-    """
+    """Generate `num_events` synthetic events spread across `days` days ending `as_of`."""
     rng = Random(seed)
     profiles = _build_profiles(rng)
     weights = [profile.volume_weight for profile in profiles]
@@ -167,12 +158,7 @@ def write_dataset(
     output_dir: Path,
     as_of: date | None = None,
 ) -> list[Path]:
-    """Generate events and write them as NDJSON, partitioned by date/hour.
-
-    Each partition's `events.json` is opened in truncate ("w") mode, so
-    re-running with identical arguments overwrites prior output with the
-    same content instead of duplicating it.
-    """
+    """Generate events and write them as JSON."""
     resolved_as_of = as_of if as_of is not None else datetime.now(UTC).date()
     events = generate_events(seed=seed, num_events=num_events, days=days, as_of=resolved_as_of)
 

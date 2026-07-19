@@ -1,12 +1,8 @@
 """`StatsStore` port + `InMemoryStore` adapter.
 
-Concurrency: `InMemoryStore.upsert_stats`
-never mutates the dict currently in use. It builds a brand-new, complete
-dict and reassigns the single `_stats` attribute reference in one step
-(atomic in CPython -- readers via `get_stats` can never observe a
-partially-updated aggregate, whether or not they interleave with a write).
-A lock still serializes concurrent *writers* against each other, but reads
-are intentionally lock-free.
+Concurrency: `InMemoryStore.upsert_stats` never mutates the dict currently in
+use. It builds a brand-new, complete dict and reassigns the single `_stats`
+attribute reference in one step.
 """
 
 from __future__ import annotations
@@ -36,8 +32,6 @@ class StatsStore(Protocol):
 
 
 class InMemoryStore:
-    """Default `StatsStore`: in-process dict, swapped atomically on update."""
-
     def __init__(self) -> None:
         self._stats: dict[PoolId, PoolStats] = {}
         self._freshness: datetime | None = None

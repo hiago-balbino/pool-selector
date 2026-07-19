@@ -1,6 +1,4 @@
-"""Integration tests for the aggregator, integrating the real
-`SlidingWindowStrategy` and `reason_classification`.
-"""
+"""Integration tests for the aggregator."""
 
 from datetime import UTC, datetime, timedelta
 
@@ -55,7 +53,7 @@ def test_events_outside_recency_window_do_not_count_in_aggregate() -> None:
 
 def test_availability_failures_uses_configurable_reason_classification() -> None:
     """Swapping the classification config changes availability_failures with no
-    aggregator code change -- proves the config drives the count, not a
+    aggregator code change. Proves config drives the count, not a
     hardcoded reason string."""
     events = [
         _event("pool-r6.xlarge-us-east-1a", reason="TIMED_OUT", job_id="a"),
@@ -107,8 +105,6 @@ def test_empty_events_produce_empty_aggregate() -> None:
 
 
 def test_recent_events_counts_successes_within_the_window() -> None:
-    """PoolStats.recent_events: non-redundant "recent activity without
-    failure" signal, distinct from total_events."""
     events = [
         _event("pool-r6.xlarge-us-east-1a", reason="SPOT_INSTANCE_TERMINATION", job_id="fail"),
         _event("pool-r6.xlarge-us-east-1a", reason="TIMED_OUT", job_id="fail-1"),

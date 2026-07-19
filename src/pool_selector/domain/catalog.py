@@ -11,8 +11,6 @@ from enum import StrEnum
 
 
 class WorkloadCategory(StrEnum):
-    """Workload category a pool's instance family serves best."""
-
     COMPUTE = "compute"
     MEMORY = "memory"
     GENERAL = "general"

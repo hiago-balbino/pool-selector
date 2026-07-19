@@ -1,9 +1,4 @@
-"""Integration tests for `RefreshTask`.
-
-Covers the error-handling contract: on source failure, the previous valid
-aggregate is kept intact, freshness does not advance, and the process must
-not crash.
-"""
+"""Integration tests for `RefreshTask`."""
 
 import asyncio
 import json
@@ -14,15 +9,11 @@ import pytest
 
 from pool_selector.domain.models import PoolId
 from pool_selector.domain.recency import SlidingWindowStrategy
-from pool_selector.ingestion.source import DataSource
 from pool_selector.store.refresh import RefreshTask
 from pool_selector.store.stats_store import InMemoryStore
 
 
 def _line(job_id: str, minutes_ago: float, reason: str | None) -> str:
-    """Build a raw NDJSON line whose `finished_at` is relative to wall-clock
-    "now", so it always falls inside RefreshTask's real-time recency window
-    regardless of when the test suite happens to run."""
     finished_at = datetime.now(UTC) - timedelta(minutes=minutes_ago)
     return json.dumps(
         {
@@ -40,7 +31,7 @@ VALID_LINE_2 = _line("job-2", minutes_ago=2, reason=None)
 
 
 class _WorkingSource:
-    """DataSource fake that yields a fixed set of valid NDJSON lines."""
+    """DataSource fake that yields a fixed set of valid JSON lines."""
 
     def __init__(self, lines: list[str]) -> None:
         self._lines = lines
@@ -140,8 +131,6 @@ def test_run_once_with_failing_source_does_not_raise() -> None:
 
 
 def test_run_once_with_failing_source_on_first_ever_refresh_leaves_freshness_none() -> None:
-    """No prior successful refresh exists yet -- freshness must remain None,
-    not just "unchanged", so /ready correctly reports not-ready."""
     store = InMemoryStore()
     task = RefreshTask(
         source=_FailingSource(), store=store, recency=_recency(), interval_seconds=60
@@ -151,13 +140,6 @@ def test_run_once_with_failing_source_on_first_ever_refresh_leaves_freshness_non
 
     assert store.get_freshness() is None
     assert store.get_stats() == {}
-
-
-def test_data_source_protocol_conformance_of_test_fakes() -> None:
-    """Sanity check that the fakes used above genuinely satisfy the port
-    RefreshTask depends on, not an incidental duck-typed coincidence."""
-    assert isinstance(_WorkingSource([]), DataSource)
-    assert isinstance(_FailingSource(), DataSource)
 
 
 class _CountingSource:

@@ -1,12 +1,4 @@
-"""Availability scoring: configurable failure rate + Wilson confidence bound.
-
-What counts as an "availability failure" is delegated entirely to
-`reason_classification.classify` via `is_availability_failure` — never a
-hardcoded string comparison in this module. Changing the
-`AVAILABILITY_FAILURE` category (e.g. to also include `TIMED_OUT`) changes
-`raw_score`'s result purely through the injected `ReasonClassification`
-config, with no code change here.
-"""
+"""Availability scoring: configurable failure rate + Wilson confidence bound."""
 
 from __future__ import annotations
 
@@ -21,7 +13,6 @@ from pool_selector.domain.reason_classification import (
 
 
 def is_availability_failure(reason: str | None, config: ReasonClassification) -> bool:
-    """True when `reason` classifies as an availability failure under `config`."""
     return classify(reason, config) is Category.AVAILABILITY_FAILURE
 
 
@@ -54,7 +45,7 @@ def wilson_lower_bound(successes: int, total: int, z: float = 1.96) -> float:
 def confidence_score(stats: PoolStats) -> float:
     """Ranking score: Wilson lower bound of the pool's success rate.
 
-    Successes are `total_events - availability_failures` — this is the
+    Successes are `total_events - availability_failures`. This is the
     score used for tie-breaking: larger samples at the same failure
     rate yield a higher (more confident) lower bound.
     """

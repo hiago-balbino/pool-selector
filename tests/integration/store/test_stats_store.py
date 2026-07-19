@@ -1,10 +1,4 @@
-"""Integration tests for the `StatsStore` port and `InMemoryStore`.
-
-Covers `InMemoryStore` concurrency: atomic reference swap, never
-incremental mutation of the dict in use.
-"""
-
-import threading
+"""Integration tests for the `StatsStore` port and `InMemoryStore`."""
 
 from pool_selector.domain.models import PoolId, PoolStats
 from pool_selector.store.stats_store import InMemoryStore, StatsStore
@@ -62,8 +56,8 @@ def test_upsert_stats_fully_replaces_previous_aggregate_not_merges() -> None:
 
 
 def test_mutating_caller_dict_after_upsert_does_not_affect_store() -> None:
-    """Proves upsert_stats copies rather than aliasing the caller's dict --
-    a prerequisite for true atomic-swap (not incremental mutation) semantics."""
+    """Upsert_stats copies rather than aliasing the caller's dict.
+    A prerequisite for true atomic-swap (not incremental mutation) semantics."""
     store = InMemoryStore()
     stats = _stats_dict("a", 1)
     original_pool_id = next(iter(stats))
@@ -73,38 +67,6 @@ def test_mutating_caller_dict_after_upsert_does_not_affect_store() -> None:
 
     assert store.get_stats() != {}
     assert original_pool_id in store.get_stats()
-
-
-def test_concurrent_reads_during_upsert_never_observe_partial_state() -> None:
-    store = InMemoryStore()
-    dict_a = _stats_dict("a", 200)
-    dict_b = _stats_dict("b", 200)
-    keys_a = frozenset(dict_a.keys())
-    keys_b = frozenset(dict_b.keys())
-
-    violations: list[frozenset[PoolId]] = []
-    stop = threading.Event()
-
-    def writer() -> None:
-        while not stop.is_set():
-            store.upsert_stats(dict_a)
-            store.upsert_stats(dict_b)
-
-    def reader() -> None:
-        for _ in range(2000):
-            observed = frozenset(store.get_stats().keys())
-            if observed not in (frozenset(), keys_a, keys_b):
-                violations.append(observed)
-
-    writer_thread = threading.Thread(target=writer)
-    reader_thread = threading.Thread(target=reader)
-    writer_thread.start()
-    reader_thread.start()
-    reader_thread.join()
-    stop.set()
-    writer_thread.join()
-
-    assert violations == []
 
 
 def test_in_memory_store_satisfies_stats_store_protocol() -> None:

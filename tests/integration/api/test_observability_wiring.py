@@ -1,9 +1,7 @@
 """Integration tests for logging wired into the app.
 
-`JsonFormatter`'s own JSON-correctness is already covered by
-`tests/unit/observability/test_logging.py` -- this test only proves the
-*wiring*: that the middleware actually runs on every request and feeds the
-logger with the request's method/path/status/duration.
+This test only proves the *wiring*: that the middleware actually runs on
+every request and feeds the logger.
 """
 
 from __future__ import annotations
@@ -24,11 +22,6 @@ class _EmptySource:
 
 
 class _RecordCollector(logging.Handler):
-    """Collects emitted `LogRecord`s directly, bypassing whatever handler
-    `configure_logging()` installs on the root logger -- attaching straight
-    to the app's own logger keeps this test independent of that global
-    (root-wide) side effect."""
-
     def __init__(self) -> None:
         super().__init__()
         self.records: list[logging.LogRecord] = []

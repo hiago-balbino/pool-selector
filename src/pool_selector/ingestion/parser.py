@@ -1,9 +1,4 @@
-"""Tolerant NDJSON parser.
-
-A malformed line (invalid JSON syntax or a missing required field) is
-discarded -- logged at WARNING and skipped -- rather than raising, so a
-single bad line never aborts ingestion of the rest of the file.
-"""
+"""Tolerant JSON parser."""
 
 from __future__ import annotations
 
@@ -20,7 +15,6 @@ _REQUIRED_FIELDS = ("finished_at", "job_id", "pool_id", "status")
 
 
 def parse_line(raw: str) -> JobEvent | None:
-    """Parse one raw NDJSON line into a `JobEvent`, or `None` if malformed."""
     try:
         payload = json.loads(raw)
     except json.JSONDecodeError:

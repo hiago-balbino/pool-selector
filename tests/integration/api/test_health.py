@@ -1,16 +1,4 @@
-"""Integration tests for `/health` (liveness) and `/ready` (readiness).
-
-`/health` is always 200 while the process is alive; `/ready`
-fails (503) until the first refresh has completed successfully -- i.e. until
-`StatsStore.get_freshness()` is no longer `None` -- and succeeds afterwards.
-
-A `_FailingSource` (mirrors `tests/integration/store/test_refresh.py`'s fake)
-keeps the store's freshness at `None` even after the app's synchronous
-startup refresh runs, since `RefreshTask.run_once()` swallows the exception
-without advancing freshness -- this is what makes the "not ready" state
-observable through a real, fully-started `TestClient` app rather than
-inspecting internal state before startup.
-"""
+"""Integration tests for `/health` (liveness) and `/ready` (readiness)."""
 
 from __future__ import annotations
 
@@ -24,7 +12,7 @@ from pool_selector.store.stats_store import InMemoryStore
 
 
 class _EmptySource:
-    """DataSource fake with nothing to yield -- refresh succeeds with {} stats."""
+    """DataSource fake with nothing to yield. Refresh succeeds with {} stats."""
 
     def iter_events(self) -> Iterator[str]:
         return iter(())
@@ -56,8 +44,8 @@ def test_health_returns_200_when_ready() -> None:
 
 
 def test_health_returns_200_even_when_not_ready() -> None:
-    """Liveness must not be coupled to data readiness -- a source outage
-    should never make `/health` fail, only `/ready`."""
+    """Liveness must not be coupled to data readiness. A source outage should
+    never make `/health` fail, only `/ready`."""
     with _app_with(_FailingSource()) as client:
         response = client.get("/health")
 

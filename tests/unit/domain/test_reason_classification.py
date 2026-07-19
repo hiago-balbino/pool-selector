@@ -27,15 +27,9 @@ def test_classify_unrecognized_reason_returns_unknown_without_raising() -> None:
 
 
 def test_classify_extensibility_new_reason_is_one_line_config_change() -> None:
-    """Proves adding a reason to a category is a config change, not a code change.
-
-    `classify` itself is untouched here — only the `ReasonClassification`
-    instance passed in differs, demonstrating extensibility.
-    """
     extended_config = ReasonClassification(
         availability_failure=frozenset({"SPOT_INSTANCE_TERMINATION", "CAPACITY_NOT_AVAILABLE"})
     )
 
     assert classify("CAPACITY_NOT_AVAILABLE", extended_config) == Category.AVAILABILITY_FAILURE
-    # Default config remains unaffected by the extended one.
     assert classify("CAPACITY_NOT_AVAILABLE") == Category.UNKNOWN

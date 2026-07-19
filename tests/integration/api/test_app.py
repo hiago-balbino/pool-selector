@@ -1,9 +1,4 @@
-"""Integration tests for the FastAPI app's startup wiring.
-
-Covers: the app starts via `TestClient` without error; before the first
-refresh completes, internal state reflects "not ready"; after startup,
-`StatsStore.get_freshness()` is no longer `None`.
-"""
+"""Integration tests for the FastAPI app's startup wiring."""
 
 from __future__ import annotations
 
@@ -22,7 +17,7 @@ VALID_LINE = (
 
 
 class _FakeSource:
-    """DataSource fake yielding a fixed set of raw NDJSON lines."""
+    """DataSource fake yielding a fixed set of raw JSON lines."""
 
     def __init__(self, lines: list[str]) -> None:
         self._lines = lines
@@ -54,7 +49,7 @@ def test_state_reflects_not_ready_before_first_refresh_completes() -> None:
         interval_seconds=3600,
     )
 
-    # No lifespan has run yet (TestClient context never entered) -- the
+    # No lifespan has run yet (TestClient context never entered). The
     # store must still report "never refreshed".
     assert store.get_freshness() is None
 

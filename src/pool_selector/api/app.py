@@ -1,12 +1,4 @@
-"""FastAPI app + startup wiring.
-
-The app instantiates its `DataSource`/`StatsStore`/`RefreshTask` from
-`pool_selector.settings.Settings` (a `pydantic-settings` loader over the
-environment variables documented in `.env.example`), triggers a
-synchronous initial refresh at startup so `StatsStore.get_freshness()` is
-populated before traffic is served, and then keeps `RefreshTask.start()`
-running as a background loop for the app's lifetime.
-"""
+"""FastAPI app + startup wiring."""
 
 from __future__ import annotations
 
@@ -43,7 +35,6 @@ def _source_from_settings(settings: Settings) -> DataSource:
 
 
 def _describe_window(recency: RecencyStrategy) -> str:
-    """Human-readable description of the active window, for `RankedPool.window`."""
     if isinstance(recency, SlidingWindowStrategy):
         return f"{recency.window_minutes}m sliding"
     return type(recency).__name__
@@ -60,8 +51,7 @@ def create_app(
     """Build the FastAPI app and wire `RefreshTask` into its lifespan.
 
     All dependencies are optional and injectable (default: built from
-    `Settings`), so tests can supply fakes without touching real
-    filesystem/S3/env state.
+    `Settings`).
     """
     settings = get_settings()
     resolved_store: StatsStore = store if store is not None else InMemoryStore()
@@ -89,8 +79,6 @@ def create_app(
 
     @asynccontextmanager
     async def lifespan(_: FastAPI) -> AsyncIterator[None]:
-        # Synchronous initial refresh: freshness must be populated before the
-        # app starts accepting traffic, so /ready doesn't report healthy too early.
         refresh_task.run_once()
         background = asyncio.create_task(refresh_task.start())
         try:
@@ -111,7 +99,6 @@ def create_app(
     async def _logging_middleware(
         request: Request, call_next: Callable[[Request], Awaitable[Response]]
     ) -> Response:
-        """Structured log line for every request."""
         start = time.monotonic()
         response = await call_next(request)
         duration_seconds = time.monotonic() - start

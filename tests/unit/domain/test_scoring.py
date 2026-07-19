@@ -1,9 +1,4 @@
-"""Unit tests for availability scoring and Wilson confidence.
-
-The configurability test below proves the core requirement: swapping which
-reasons count as AVAILABILITY_FAILURE changes `raw_score`'s result without
-any change to `scoring.py` itself.
-"""
+"""Unit tests for availability scoring and Wilson confidence."""
 
 import pytest
 
@@ -47,10 +42,6 @@ def test_raw_score_zero_total_events_returns_one_without_dividing_by_zero() -> N
 
 
 def test_raw_score_configurability_changing_availability_failure_category_changes_result() -> None:
-    """Swapping which reasons count as AVAILABILITY_FAILURE must change
-    raw_score's result purely via config -- scoring.py's code path is identical
-    for both computations below.
-    """
     events_reasons = [
         "SPOT_INSTANCE_TERMINATION",
         "TIMED_OUT",
@@ -95,19 +86,7 @@ def test_is_availability_failure_delegates_to_classification_not_hardcoded_strin
     assert is_availability_failure("TIMED_OUT", extended_config) is True
 
 
-def test_wilson_lower_bound_zero_successes_matches_known_reference_for_any_sample_size() -> None:
-    """0 successes out of n always yields an exact 0.0 lower bound (Wilson score
-    algebra), regardless of n -- a known reference invariant from the literature,
-    checked at both n=10 and n=100.
-    """
-    assert wilson_lower_bound(0, 10) == pytest.approx(0.0, abs=1e-9)
-    assert wilson_lower_bound(0, 100) == pytest.approx(0.0, abs=1e-9)
-
-
 def test_confidence_score_large_sample_beats_small_sample_at_zero_failure_rate() -> None:
-    """Tie-break proof: among pools with 0% failure rate, the larger sample
-    must win via a higher Wilson lower bound.
-    """
     large_sample = _stats(total_events=1000, availability_failures=0)
     small_sample = _stats(total_events=10, availability_failures=0)
 

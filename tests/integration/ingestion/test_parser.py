@@ -1,8 +1,4 @@
-"""Integration tests for the tolerant NDJSON parser.
-
-Covers the edge case: a malformed NDJSON line is skipped, and the rest of
-the file is still processed.
-"""
+"""Integration tests for the tolerant JSON parser."""
 
 import logging
 from datetime import datetime
@@ -87,7 +83,7 @@ def test_malformed_line_logs_warning_instead_of_raising(
 
 def test_finished_at_with_wrong_type_returns_none_without_raising() -> None:
     """`finished_at` present but not a string (e.g. a JSON number) makes
-    `datetime.fromisoformat` raise TypeError rather than ValueError -- the
+    `datetime.fromisoformat` raise TypeError rather than ValueError. The
     parser must catch that too and skip the line, not propagate."""
     line = (
         '{"finished_at": 1234567890, "job_id": "job-1", '

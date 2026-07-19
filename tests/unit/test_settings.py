@@ -1,9 +1,4 @@
-"""Unit tests for `pool_selector.settings`.
-
-Covers documented defaults (60min recency window, 5-event low-confidence
-threshold): correct defaults with no environment variables set, and
-env-var overrides respected.
-"""
+"""Unit tests for `pool_selector.settings`."""
 
 from __future__ import annotations
 
@@ -14,7 +9,6 @@ import pytest
 from pool_selector.settings import Settings
 
 _ENV_VARS = (
-    "PORT",
     "DATA_SOURCE",
     "LOCAL_DATA_DIR",
     "S3_BUCKET",
@@ -32,9 +26,7 @@ def _clean_env(monkeypatch: pytest.MonkeyPatch) -> None:
         monkeypatch.delenv(var, raising=False)
 
 
-def test_defaults_apply_when_no_env_vars_set() -> None:
-    """Without env vars, the documented defaults apply
-    (60min recency window, 5-event low-confidence threshold)."""
+def test_defaults_match_spec_when_no_env_vars_set() -> None:
     settings = Settings(_env_file=None)
 
     assert settings.recency_window_minutes == 60
@@ -42,11 +34,9 @@ def test_defaults_apply_when_no_env_vars_set() -> None:
     assert settings.data_source == "local"
     assert settings.local_data_dir == Path("./data")
     assert settings.refresh_interval_seconds == 60
-    assert settings.port == 5050
 
 
 def test_recency_window_minutes_override_is_respected(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Override via environment variable is respected."""
     monkeypatch.setenv("RECENCY_WINDOW_MINUTES", "120")
 
     settings = Settings(_env_file=None)
@@ -71,7 +61,6 @@ def test_refresh_interval_seconds_override_is_respected(monkeypatch: pytest.Monk
 
 
 def test_data_source_and_s3_overrides_are_respected(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Source selection (local/S3) is configurable via env."""
     monkeypatch.setenv("DATA_SOURCE", "s3")
     monkeypatch.setenv("S3_BUCKET", "spot-events-bucket")
     monkeypatch.setenv("S3_PREFIX", "events/")

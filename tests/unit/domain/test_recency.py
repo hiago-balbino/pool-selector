@@ -47,7 +47,6 @@ def test_event_just_past_window_boundary_is_excluded() -> None:
 
 
 def test_different_window_minutes_produce_different_results_for_same_events() -> None:
-    """Proves configurability: window_minutes is a constructor param, not hardcoded."""
     events = [_event(20, job_id="a"), _event(50, job_id="b"), _event(100, job_id="c")]
 
     narrow = SlidingWindowStrategy(window_minutes=30)

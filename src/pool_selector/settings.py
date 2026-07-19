@@ -1,12 +1,4 @@
-"""Typed configuration loader.
-
-Wraps `pydantic-settings` around the same environment variables already
-documented in `.env.example`: recency window, low-confidence threshold,
-refresh interval, and data source selection (local/S3). This produces the
-exact same values `api/app.py`'s `create_app` accepts via its injectable
-keyword arguments -- a validated loader in place of raw `os.environ` reads,
-without introducing a new config surface.
-"""
+"""Typed configuration loader."""
 
 from __future__ import annotations
 
@@ -21,7 +13,6 @@ class Settings(BaseSettings):
 
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
-    port: int = 5050
     data_source: Literal["local", "s3"] = "local"
     local_data_dir: Path = Path("./data")
     s3_bucket: str = ""

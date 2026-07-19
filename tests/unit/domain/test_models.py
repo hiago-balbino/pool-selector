@@ -1,4 +1,4 @@
-"""Unit tests for domain models: JobEvent, PoolId, PoolStats and RankedPool."""
+"""Unit tests for domain models."""
 
 from datetime import UTC, datetime
 
@@ -22,11 +22,6 @@ def test_pool_id_parse_happy_path() -> None:
 
 
 def test_pool_id_parse_multi_segment_az() -> None:
-    """AZ segments can contain more than one internal hyphen (e.g. "eu-central-1a").
-
-    maxsplit=2 must keep the whole AZ intact instead of splitting on its
-    first hyphen.
-    """
     pool_id = PoolId.parse("pool-c5.large-eu-central-1a")
 
     assert pool_id.instance_type == "c5.large"
@@ -46,7 +41,6 @@ def test_pool_id_parse_malformed_raises_handled_error_not_generic_exception() ->
     with pytest.raises(PoolIdParseError):
         PoolId.parse("pool-r6.xlarge")
 
-    # Confirms it's a specific, catchable error type, not a bare Exception.
     assert issubclass(PoolIdParseError, ValueError)
 
 

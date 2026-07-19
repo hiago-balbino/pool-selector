@@ -1,8 +1,5 @@
-"""`DataSource` port + adapters.
-
-`DataSource` isolates the ingestion pipeline from where raw NDJSON lines come
-from (local filesystem vs S3). Adapters yield raw lines only -- parsing into
-`JobEvent` is `ingestion/parser.py`'s job, not this module's.
+"""`DataSource` port + adapters. `DataSource` isolates the ingestion pipeline
+from where raw JSON lines come from (local filesystem vs S3).
 """
 
 from __future__ import annotations
@@ -18,19 +15,12 @@ class DataSource(Protocol):
     """Common protocol for raw event line sources."""
 
     def iter_events(self) -> Iterator[str]:
-        """Yield raw NDJSON lines, one per event."""
+        """Yield raw JSON lines, one per event."""
         ...
 
 
 @dataclass(frozen=True)
 class LocalFileSource:
-    """Iterates `.json` (NDJSON) files under a directory.
-
-    Files are discovered recursively (`rglob`) so date/hour-partitioned
-    layouts -- as produced by `tools/generate_data.py` -- are supported, and
-    sorted for deterministic ordering across runs.
-    """
-
     directory: Path
 
     def iter_events(self) -> Iterator[str]:
@@ -46,13 +36,6 @@ class LocalFileSource:
 
 @dataclass(frozen=True)
 class S3Source:
-    """Iterates NDJSON objects under an S3 bucket/prefix via a boto3 client.
-
-    `client` is untyped (`Any`): boto3 ships no inline type stubs and this
-    project has no `mypy-boto3-s3` dev dependency, so a precise type here
-    would require adding one. Tested against `moto`, never real AWS.
-    """
-
     bucket: str
     prefix: str
     client: Any

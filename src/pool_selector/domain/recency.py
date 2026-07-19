@@ -1,10 +1,4 @@
-"""Pluggable recency (temporal weighting) strategies.
-
-`RecencyStrategy` implementations decide which `JobEvent`s count towards a
-pool's stats "now". `SlidingWindowStrategy` applies a hard cutoff at
-`window_minutes`, always a constructor parameter (configurable via
-settings/env upstream), never hardcoded in this module.
-"""
+"""Pluggable recency (temporal weighting)."""
 
 from __future__ import annotations
 
@@ -27,11 +21,7 @@ class RecencyStrategy(Protocol):
 
 @dataclass(frozen=True)
 class SlidingWindowStrategy:
-    """Hard cutoff: only events within the last `window_minutes` count.
-
-    `window_minutes` is a construction parameter so different environments
-    (or call sites) can use different windows without touching this code.
-    """
+    """Hard cutoff: only events within the last `window_minutes` count."""
 
     window_minutes: int
 

@@ -1,9 +1,4 @@
-"""Structured JSON logging.
-
-`configure_logging` installs a single stream handler on the root logger
-that emits one JSON object per log record: level, timestamp, message, plus
-any extra fields passed via `logger.info(..., extra={...})`.
-"""
+"""Structured JSON logging."""
 
 from __future__ import annotations
 
@@ -16,8 +11,6 @@ _RESERVED_RECORD_KEYS = frozenset(logging.LogRecord("", 0, "", 0, "", (), None).
 
 
 class JsonFormatter(logging.Formatter):
-    """Formats each `LogRecord` as a single JSON line."""
-
     def format(self, record: logging.LogRecord) -> str:
         payload: dict[str, Any] = {
             "timestamp": datetime.fromtimestamp(record.created, tz=UTC).isoformat(),
@@ -31,7 +24,6 @@ class JsonFormatter(logging.Formatter):
 
 
 def configure_logging(level: int = logging.INFO) -> None:
-    """Install a JSON-formatted stream handler on the root logger."""
     handler = logging.StreamHandler()
     handler.setFormatter(JsonFormatter())
     root = logging.getLogger()

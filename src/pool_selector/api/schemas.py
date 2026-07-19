@@ -1,9 +1,4 @@
-"""Pydantic API schemas mirroring the domain's `RankedPool`.
-
-`PoolResponse` is the default single-pool response body (`top_n` unset);
-`PoolRankingResponse` wraps a list of `PoolResponse` for `top_n > 1`.
-`ErrorResponse` is the explanatory body used for 400/404 responses.
-"""
+"""Pydantic API schemas mirroring the domain's `RankedPool`."""
 
 from __future__ import annotations
 
@@ -15,14 +10,6 @@ from pool_selector.domain.models import RankedPool
 
 
 class PoolResponse(BaseModel):
-    """A single ranked pool, enriched for the API response.
-
-    `RankedPool.score` reports `raw_score` (not the internal Wilson
-    `confidence_score` used only for ranking order) -- see
-    `domain/selector.py`'s `select_best_pools`. This schema mirrors that
-    field as-is; it does not expose the internal ranking score.
-    """
-
     pool_id: str
     instance_type: str
     az: str
@@ -45,12 +32,8 @@ class PoolResponse(BaseModel):
 
 
 class PoolRankingResponse(BaseModel):
-    """Ordered list of pools returned when `top_n` is requested."""
-
     pools: list[PoolResponse]
 
 
 class ErrorResponse(BaseModel):
-    """Explanatory error body for 400/404 responses."""
-
     detail: str

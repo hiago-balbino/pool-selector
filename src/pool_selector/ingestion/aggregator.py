@@ -2,16 +2,7 @@
 
 The active `RecencyStrategy` is applied *before* counting, so `total_events`
 and `availability_failures` already reflect only the events considered
-"now". `availability_failures` is decided by `scoring.is_availability_failure`,
-which itself delegates to `reason_classification.classify` -- never a
-hardcoded reason string.
-
-`PoolStats.recent_events` is populated as `total_events - availability_failures`
-(successes within the active window), not a second, narrower window. This
-makes `recent_events` a non-redundant tie-break signal alongside
-`confidence_score`: "recent activity without failure" distinct from raw
-`total_events`.
-"""
+"now"."""
 
 from __future__ import annotations
 

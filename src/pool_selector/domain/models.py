@@ -13,8 +13,6 @@ class PoolIdParseError(ValueError):
 
 @dataclass(frozen=True)
 class JobEvent:
-    """A single validated NDJSON job execution event."""
-
     finished_at: datetime
     job_id: str
     pool_id: str
@@ -24,8 +22,6 @@ class JobEvent:
 
 @dataclass(frozen=True)
 class PoolId:
-    """Parsed representation of a `pool_id` string."""
-
     raw: str
     instance_type: str
     family: str
@@ -36,8 +32,7 @@ class PoolId:
         """Parse "pool-<instance-type>-<az>" into its components.
 
         `instance_type` never contains a hyphen (e.g. "r6.xlarge"), but `az`
-        does (e.g. "us-east-1c", or even multi-hyphen regions like
-        "eu-central-1a"). `maxsplit=2` guarantees the AZ segment is captured
+        does (e.g. "us-east-1c"). `maxsplit=2` guarantees the AZ segment is captured
         whole instead of being cut at its first internal hyphen.
         """
         parts = raw.split("-", 2)
@@ -50,8 +45,6 @@ class PoolId:
 
 @dataclass
 class PoolStats:
-    """Aggregated statistics for a pool over the active recency window."""
-
     pool_id: PoolId
     total_events: int
     availability_failures: int
@@ -60,8 +53,6 @@ class PoolStats:
 
 @dataclass
 class RankedPool:
-    """A pool with its computed score, ready for API response mapping."""
-
     pool_id: PoolId
     score: float
     sample_size: int

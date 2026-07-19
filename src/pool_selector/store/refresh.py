@@ -4,8 +4,7 @@ Reads `DataSource`, parses, aggregates, and updates `StatsStore` on an
 interval. On any failure during a refresh cycle (source unavailable,
 malformed data surviving the tolerant parser, etc.), the previous valid
 aggregate is left untouched, `freshness` does not advance, and the error is
-logged rather than raised -- the process must keep serving the last known
-good recommendation instead of crashing.
+logged rather than raised.
 """
 
 from __future__ import annotations
@@ -24,8 +23,6 @@ logger = logging.getLogger(__name__)
 
 
 class RefreshTask:
-    """Reads `source`, aggregates via `recency`, and writes into `store`."""
-
     def __init__(
         self,
         source: DataSource,
@@ -39,8 +36,6 @@ class RefreshTask:
         self._interval_seconds = interval_seconds
 
     def run_once(self) -> None:
-        """Run a single refresh cycle. Never raises: failures are logged and
-        leave the store's aggregate/freshness untouched."""
         try:
             lines = list(self._source.iter_events())
             events = list(parse_events(lines))
@@ -52,7 +47,6 @@ class RefreshTask:
             )
 
     async def start(self) -> None:
-        """Run `run_once` forever, sleeping `interval_seconds` between cycles."""
         while True:
             self.run_once()
             await asyncio.sleep(self._interval_seconds)

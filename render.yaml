@@ -8,7 +8,7 @@ services:
     region: oregon
     healthCheckPath: /health
     # Deploy only after the linked branch's CI checks (the GitHub Actions
-    # workflow in .github/workflows/ci.yml) report success -- no separate
+    # workflow in .github/workflows/ci.yml) report success. No separate
     # deploy step needed in the CI workflow itself. Render reads this from
     # GitHub's check-run status for the commit via its GitHub App
     # integration, set up once when the repo is connected in the dashboard.
@@ -27,8 +27,8 @@ services:
       - key: REFRESH_INTERVAL_SECONDS
         value: "60"
       # Render's filesystem is ephemeral across deploys, so there is no
-      # pre-existing ./data to read from -- generate a fresh synthetic
-      # dataset at container startup instead (see docker-entrypoint.sh).
+      # pre-existing ./data to read from. Generate a fresh synthetic
+      # dataset at container startup instead.
       # Set to "false" once a real DATA_SOURCE=s3 is configured.
       - key: GENERATE_SAMPLE_DATA
         value: "true"
