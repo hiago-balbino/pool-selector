@@ -30,8 +30,11 @@ def _source_from_settings(settings: Settings) -> DataSource:
             bucket=settings.s3_bucket,
             prefix=settings.s3_prefix,
             client=boto3.client("s3"),
+            window_minutes=settings.recency_window_minutes,
         )
-    return LocalFileSource(directory=settings.local_data_dir)
+    return LocalFileSource(
+        directory=settings.local_data_dir, window_minutes=settings.recency_window_minutes
+    )
 
 
 def _describe_window(recency: RecencyStrategy) -> str:
@@ -55,7 +58,7 @@ def create_app(
     """
     settings = get_settings()
     resolved_store: StatsStore = store if store is not None else InMemoryStore()
-    resolved_source = source if source is not None else _source_from_settings(settings)
+    resolved_source: DataSource = source if source is not None else _source_from_settings(settings)
     resolved_recency: RecencyStrategy = (
         recency
         if recency is not None

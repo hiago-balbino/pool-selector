@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Iterator
+from datetime import datetime
 
 import pytest
 from fastapi import FastAPI
@@ -18,7 +19,7 @@ from pool_selector.store.stats_store import InMemoryStore
 class _EmptySource:
     """DataSource fake with nothing to yield. Refresh always aggregates to {}."""
 
-    def iter_events(self) -> Iterator[str]:
+    def iter_events(self, now: datetime) -> Iterator[str]:
         return iter(())
 
 

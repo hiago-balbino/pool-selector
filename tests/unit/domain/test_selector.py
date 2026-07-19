@@ -102,7 +102,7 @@ def test_exact_tie_resolved_deterministically_by_seed_same_seed_same_result() ->
 
 
 def test_different_seeds_can_change_the_tie_break_order() -> None:
-    """Proves the seed factor actually participates in ordering (load distribution),
+    """The seed factor actually participates in ordering (load distribution),
     not just that results are internally consistent."""
     x = _stats("pool-r6.xlarge-us-east-1a", 20, 4, recent_events=10)
     y = _stats("pool-r6.xlarge-us-east-1b", 20, 4, recent_events=10)

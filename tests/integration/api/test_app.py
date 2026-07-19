@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Iterator
+from datetime import datetime
 
 from fastapi.testclient import TestClient
 
@@ -22,7 +23,7 @@ class _FakeSource:
     def __init__(self, lines: list[str]) -> None:
         self._lines = lines
 
-    def iter_events(self) -> Iterator[str]:
+    def iter_events(self, now: datetime) -> Iterator[str]:
         yield from self._lines
 
 

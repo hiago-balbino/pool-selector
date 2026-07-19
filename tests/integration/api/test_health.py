@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Iterator
+from datetime import datetime
 
 from fastapi.testclient import TestClient
 
@@ -14,14 +15,14 @@ from pool_selector.store.stats_store import InMemoryStore
 class _EmptySource:
     """DataSource fake with nothing to yield. Refresh succeeds with {} stats."""
 
-    def iter_events(self) -> Iterator[str]:
+    def iter_events(self, now: datetime) -> Iterator[str]:
         return iter(())
 
 
 class _FailingSource:
     """DataSource fake simulating a source that never becomes available."""
 
-    def iter_events(self) -> Iterator[str]:
+    def iter_events(self, now: datetime) -> Iterator[str]:
         raise ConnectionError("simulated data source outage")
         yield  # pragma: no cover - unreachable, satisfies generator typing
 

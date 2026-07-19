@@ -36,10 +36,11 @@ class RefreshTask:
         self._interval_seconds = interval_seconds
 
     def run_once(self) -> None:
+        now = datetime.now(UTC)
         try:
-            lines = list(self._source.iter_events())
+            lines = list(self._source.iter_events(now))
             events = list(parse_events(lines))
-            stats = aggregate(events, self._recency, now=datetime.now(UTC))
+            stats = aggregate(events, self._recency, now=now)
             self._store.upsert_stats(stats)
         except Exception:
             logger.exception(

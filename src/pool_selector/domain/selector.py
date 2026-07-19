@@ -40,7 +40,7 @@ def _tie_break_key(
 
 def select_best_pools(
     stats: list[PoolStats],
-    filter: PoolFilter,  # noqa: A002 - shadows the builtin, matches the domain's naming
+    filter: PoolFilter,
     top_n: int = 1,
     seed: int | None = None,
     low_confidence_threshold: int = 5,

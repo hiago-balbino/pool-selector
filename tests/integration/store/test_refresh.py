@@ -36,14 +36,14 @@ class _WorkingSource:
     def __init__(self, lines: list[str]) -> None:
         self._lines = lines
 
-    def iter_events(self) -> Iterator[str]:
+    def iter_events(self, now: datetime) -> Iterator[str]:
         yield from self._lines
 
 
 class _FailingSource:
     """DataSource fake simulating an unavailable source (S3/local down)."""
 
-    def iter_events(self) -> Iterator[str]:
+    def iter_events(self, now: datetime) -> Iterator[str]:
         raise ConnectionError("simulated data source outage")
         yield  # pragma: no cover - unreachable, satisfies generator typing
 
@@ -150,7 +150,7 @@ class _CountingSource:
     def __init__(self) -> None:
         self.call_count = 0
 
-    def iter_events(self) -> Iterator[str]:
+    def iter_events(self, now: datetime) -> Iterator[str]:
         self.call_count += 1
         yield from [VALID_LINE]
 
