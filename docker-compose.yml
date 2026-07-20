@@ -1,0 +1,19 @@
+services:
+  api:
+    build: .
+    ports:
+      - "${PORT:-5050}:${PORT:-5050}"
+    environment:
+      PORT: "${PORT:-5050}"
+      DATA_SOURCE: local
+      LOCAL_DATA_DIR: /app/data
+      RECENCY_WINDOW_MINUTES: "60"
+      LOW_CONFIDENCE_THRESHOLD: "5"
+      REFRESH_INTERVAL_SECONDS: "60"
+      # On by default so `make docker-up` alone is a working single-command demo (no need to run `make generate-data` first).
+      GENERATE_SAMPLE_DATA: "${GENERATE_SAMPLE_DATA:-true}"
+      SAMPLE_DATA_SEED: "${SAMPLE_DATA_SEED:-42}"
+      SAMPLE_DATA_NUM_EVENTS: "${SAMPLE_DATA_NUM_EVENTS:-2000}"
+      SAMPLE_DATA_DAYS: "${SAMPLE_DATA_DAYS:-3}"
+    volumes:
+      - ./data:/app/data

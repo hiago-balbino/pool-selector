@@ -1,0 +1,40 @@
+services:
+  - type: web
+    name: pool-selector
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    plan: free
+    region: oregon
+    healthCheckPath: /health
+    # Deploy only after the linked branch's CI checks (the GitHub Actions
+    # workflow in .github/workflows/ci.yml) report success. No separate
+    # deploy step needed in the CI workflow itself. Render reads this from
+    # GitHub's check-run status for the commit via its GitHub App
+    # integration, set up once when the repo is connected in the dashboard.
+    autoDeployTrigger: checksPass
+    envVars:
+      - key: PORT
+        value: "5050"
+      - key: DATA_SOURCE
+        value: local
+      - key: LOCAL_DATA_DIR
+        value: ./data
+      - key: RECENCY_WINDOW_MINUTES
+        value: "60"
+      - key: LOW_CONFIDENCE_THRESHOLD
+        value: "5"
+      - key: REFRESH_INTERVAL_SECONDS
+        value: "60"
+      # Render's filesystem is ephemeral across deploys, so there is no
+      # pre-existing ./data to read from. Generate a fresh synthetic
+      # dataset at container startup instead.
+      # Set to "false" once a real DATA_SOURCE=s3 is configured.
+      - key: GENERATE_SAMPLE_DATA
+        value: "true"
+      - key: SAMPLE_DATA_SEED
+        value: "42"
+      - key: SAMPLE_DATA_NUM_EVENTS
+        value: "2000"
+      - key: SAMPLE_DATA_DAYS
+        value: "3"
