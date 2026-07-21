@@ -231,7 +231,7 @@ Veja [`docs/adr/`](docs/adr/) para os registros de decisão de arquitetura por
 trás das escolhas principais deste projeto (limite inferior de Wilson,
 estratégia de recência plugável, classificação configurável de reason, ports &
 adapters, sem banco de dados, ferramental, catálogo estático de instâncias,
-pruning de partição no S3).
+pruning de partição no S3, monólito modular em vez de microsserviços).
 
 ## Fora de escopo & limitações
 
