@@ -11,9 +11,9 @@ Veja [`docs/architecture.md`](docs/architecture.md) para a arquitetura e
 ## Pré-requisitos
 
 - Python 3.14
-- [`uv`](https://docs.astral.sh/uv/getting-started/installation/) — gerenciador de
+- [`uv`](https://docs.astral.sh/uv/getting-started/installation/) - gerenciador de
   pacotes e executor de tarefas usado em todo o projeto
-- Docker + Docker Compose — necessário só para o caminho containerizado
+- Docker + Docker Compose - necessário só para o caminho containerizado
 
 ## Configuração inicial
 
@@ -36,7 +36,7 @@ Instale o próprio `uv` primeiro, se ainda não estiver disponível (veja as
 [instruções oficiais de instalação](https://docs.astral.sh/uv/getting-started/installation/)
 para sua plataforma).
 
-O `uv sync` já instala o `pre-commit` (é uma dependência de dev) — nenhum passo de
+O `uv sync` já instala o `pre-commit` (é uma dependência de dev) - nenhum passo de
 instalação separado é necessário. Para que ele de fato rode lint/format/type-check
 antes de cada commit, ative o hook do git uma vez por clone:
 
@@ -77,7 +77,7 @@ docker compose up --build
 
 Os dois caminhos leem configuração de variáveis de ambiente (veja
 [Configuração](#configuração) abaixo), e os dois geram um dataset sintético em
-`LOCAL_DATA_DIR` (default `./data`) automaticamente antes de subir o servidor — um
+`LOCAL_DATA_DIR` (default `./data`) automaticamente antes de subir o servidor - um
 único comando já é suficiente para ter uma resposta funcional em `/get-pools`, sem
 passo de setup separado. Veja
 [Gerando dados sintéticos](#gerando-dados-sintéticos) para customizar ou desligar
@@ -259,12 +259,12 @@ Passo manual equivalente:
 uv run python -m tools.generate_data --seed 42 --num-events 2000 --days 3 --output-dir ./data
 ```
 
-- `--seed` (`SAMPLE_DATA_SEED`) — a mesma seed sempre reproduz exatamente os
+- `--seed` (`SAMPLE_DATA_SEED`) - a mesma seed sempre reproduz exatamente os
   mesmos eventos (saída idêntica byte a byte)
-- `--num-events` (`SAMPLE_DATA_NUM_EVENTS`) — número total de eventos a gerar
-- `--days` (`SAMPLE_DATA_DAYS`) — quantos dias atrás, a partir de hoje, os
+- `--num-events` (`SAMPLE_DATA_NUM_EVENTS`) - número total de eventos a gerar
+- `--days` (`SAMPLE_DATA_DAYS`) - quantos dias atrás, a partir de hoje, os
   eventos se espalham
-- `--output-dir` (`LOCAL_DATA_DIR`) — onde os arquivos JSON particionados por
+- `--output-dir` (`LOCAL_DATA_DIR`) - onde os arquivos JSON particionados por
   data/hora são escritos
 
 **Desligando a geração automática:** `GENERATE_SAMPLE_DATA` tem default `true`
