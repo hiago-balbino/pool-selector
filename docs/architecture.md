@@ -5,7 +5,9 @@ centrais isolam o domínio da infraestrutura: `DataSource` (de onde os eventos
 vêm) e `StatsStore` (onde o agregado computado é lido/escrito). A API nunca toca
 infraestrutura diretamente, sempre através dessas portas. Veja
 [`docs/adr/0001-ports-and-adapters.md`](adr/0001-ports-and-adapters.md) para a
-justificativa.
+justificativa das portas, e
+[`docs/adr/0009-modular-monolith-over-microservices.md`](adr/0009-modular-monolith-over-microservices.md)
+para por que monólito em vez de microsserviços.
 
 ```mermaid
 graph TD
@@ -15,15 +17,20 @@ graph TD
     LFS --> PARSER[Parser JSON tolerante]
     S3S --> PARSER
     PARSER --> AGG[Aggregator]
+    AGG --> RECENCY["RecencyStrategy (janela deslizante)"]
     AGG --> SS["StatsStore (porta)"]
     SS --> IMS[InMemoryStore]
     REFRESH[Refresh periódico em background] --> AGG
-    API["GET /get-pools"] --> SEL[Selector]
-    SEL --> SS
+    API["GET /get-pools"] --> SS
+    API --> SEL[Selector]
     SEL --> SCORE[Scoring: taxa de falha configurável + Wilson]
-    SEL --> RECENCY["RecencyStrategy (janela deslizante)"]
     SEL --> CATALOG[Catálogo de instâncias]
 ```
+
+> O GitHub renderiza este diagrama nativamente. Para editar/visualizar fora
+> do GitHub, cole o bloco no [Mermaid Live Editor](https://mermaid.live/) ou
+> instale o [Mermaid CLI](https://github.com/mermaid-js/mermaid-cli)
+> (`@mermaid-js/mermaid-cli`) para renderizar localmente.
 
 ## Fluxo de requisição
 

@@ -16,7 +16,9 @@ fakes/`moto`, sem nenhuma infraestrutura real.
 ## Trade-off
 
 Uma camada extra de indireção (interfaces) para um projeto que hoje só
-precisa de uma implementação de cada porta.
+precisa de uma implementação de cada porta. O `S3Source` hoje só foi
+exercitado contra `moto` (S3 simulado), nunca contra um bucket real em
+produção, existe para provar que a porta `DataSource` suporta S3 de fato (que seria o caso real).
 
 ## Escopo
 
