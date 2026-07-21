@@ -184,7 +184,7 @@ de deploy:
   um botão na própria PR apontando para essa URL, que também segue um padrão
   previsível: `https://pool-selector-pr-<numero-da-pr>.onrender.com/health`.
 - **Produção**: ao mergear a PR em `main`, o mesmo mecanismo dispara o deploy
-  de produção, em `https://pool-selector.onrender.com/health`.
+  de produção, em https://pool-selector.onrender.com/health.
 
 A estratégia segue o padrão de **deploy contínuo** (*continuous deployment*), não existindo um passo manual para o deploy acontecer.
 
