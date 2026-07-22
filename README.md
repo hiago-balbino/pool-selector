@@ -13,6 +13,10 @@ Veja [`docs/architecture.md`](docs/architecture.md) para a arquitetura e
 - Python 3.14
 - [`uv`](https://docs.astral.sh/uv/getting-started/installation/) - gerenciador de
   pacotes e executor de tarefas usado em todo o projeto
+- [`make`](https://www.gnu.org/software/make/) - necessário para os comandos
+  `make run`/`make test`/`make lint`/etc. do [`Makefile`](Makefile). Todos tem
+  um passo manual equivalente descrito abaixo, caso prefira não instalar o
+  `make`
 - Docker + Docker Compose - necessário só para o caminho containerizado
 
 ## Configuração inicial
