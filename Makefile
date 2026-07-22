@@ -1,3 +1,5 @@
+DOCKER_COMPOSE := $(shell docker compose version >/dev/null 2>&1 && echo "docker compose" || echo "docker-compose")
+
 .PHONY: run test lint docker-up generate-data
 
 lint:
@@ -22,4 +24,7 @@ run:
 	uv run uvicorn pool_selector.api.app:app --host 0.0.0.0 --port $${PORT:-5050}
 
 docker-up:
-	docker compose up --build
+	$(DOCKER_COMPOSE) up --build
+
+docker-down:
+	$(DOCKER_COMPOSE) down

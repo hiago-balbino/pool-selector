@@ -67,12 +67,14 @@ uv run uvicorn pool_selector.api.app:app --host 0.0.0.0 --port 5050
 
 ```bash
 make docker-up
+make docker-down
 ```
 
 Passo manual equivalente:
 
 ```bash
 docker compose up --build
+docker compose down
 ```
 
 Os dois caminhos leem configuração de variáveis de ambiente (veja
