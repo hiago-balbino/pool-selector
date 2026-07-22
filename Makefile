@@ -1,6 +1,6 @@
 DOCKER_COMPOSE := $(shell docker compose version >/dev/null 2>&1 && echo "docker compose" || echo "docker-compose")
 
-.PHONY: run test lint docker-up generate-data
+.PHONY: lint test run docker-up docker-down generate-data
 
 lint:
 	uv run ruff check . && uv run ruff format --check . && uv run mypy src
