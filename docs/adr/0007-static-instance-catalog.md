@@ -33,6 +33,19 @@ da AWS (ou famílias cuja primeira letra não bate com a convenção, ex. uma
 hipotética família de GPU) exigem uma mudança manual de código no `_CATALOG`
 para serem categorizadas com precisão, em vez de cair no fallback.
 
+## Evolução futura: catálogo atualizado periodicamente por uma fonte externa
+
+A alternativa a edição manual do `_CATALOG` não é necessariamente uma
+consulta síncrona por requisição (o modo de falha que o "Motivo" acima
+descarta), é o mesmo padrão já usado para o `StatsStore`: um `CatalogSource`
+(porta, análoga a `DataSource`) consultado por uma tarefa periódica em
+background (análoga a `RefreshTask`), que atualiza um catálogo em memória a
+cada N minutos/horas a partir do Vantage ou da API `DescribeInstanceTypes`
+da AWS. O caminho de leitura (`category_for_family`) continuaria síncrono e
+sem I/O, lendo só o último catálogo já resolvido. Se a fonte externa falhar,
+o catálogo anterior continua servindo (mesma degradação graciosa do
+`RefreshTask` atual [`docs/adr/0002-no-database-in-memory-aggregate.md`](0002-no-database-in-memory-aggregate.md)).
+
 ## Estendendo o catálogo
 
 Adicione uma entrada `"<família>": WorkloadCategory.<CATEGORIA>` no

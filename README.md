@@ -82,8 +82,7 @@ Os dois caminhos leem configuração de variáveis de ambiente (veja
 `LOCAL_DATA_DIR` (default `./data`) automaticamente antes de subir o servidor - um
 único comando já é suficiente para ter uma resposta funcional em `/get-pools`, sem
 passo de setup separado. Veja
-[Gerando dados sintéticos](#gerando-dados-sintéticos) para customizar ou desligar
-isso.
+[Gerando dados sintéticos](#gerando-dados-sintéticos).
 
 ## Configuração
 
@@ -106,6 +105,10 @@ para `.env` para sobrescrever qualquer default:
 
 ## Exemplos de uso da API
 
+A documentação interativa (Swagger UI, gerada com FastAPI) fica disponível em
+[`/docs`](http://localhost:5050/docs) com o servidor rodando (também em
+`/redoc`, num formato alternativo).
+
 ```bash
 # Melhor pool disponível, sem filtro
 curl http://localhost:5050/get-pools
@@ -122,6 +125,15 @@ curl "http://localhost:5050/get-pools?top_n=3"
 curl http://localhost:5050/health
 curl http://localhost:5050/ready
 ```
+
+Parâmetros de filtro do `/get-pools` (todos opcionais, combináveis):
+
+| Parâmetro | Valores possíveis | Observação                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| --------- | ------------------ |---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `instance_type` | Qualquer `instance_type` presente no `pool_id` dos eventos (ex: `r6.xlarge`, `c5.large`) | Match exato                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| `family` | Prefixo do `instance_type` antes do ponto (ex: `r6`, `c5`, `m5`, `i3`, `t3`, `t3a`) | Match exato                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| `category` | `compute`, `memory`, `general`, `storage`, `burstable`, `unknown` | Ver [`domain/catalog.py`](src/pool_selector/domain/catalog.py): resolvida a partir da `family` via catálogo estático, com fallback pela convenção de nomenclatura da AWS (primeira letra da família). `unknown` existe pra cobrir famílias que não batem com nenhum dos dois (catálogo nem convenção). `category_for_family` nunca lança erro, então uma família totalmente nova cai em `unknown` em vez de quebrar a requisição. Na prática, com os dados gerados neste projeto `category=unknown` nunca vai dar match, só seria alcançável com uma família de instância real fora desse conjunto (ex: `g5`, `p4d`, `a1`, `trn1`). Veja [`docs/adr/0007-static-instance-catalog.md`](docs/adr/0007-static-instance-catalog.md) |
+| `top_n` | Inteiro positivo | Quando ausente, retorna só o melhor pool (`PoolResponse`); quando presente, retorna a lista ranqueada (`PoolRankingResponse`) com até `top_n` entradas                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
 
 Exemplo de resposta de `GET /get-pools` (um único pool):
 
@@ -153,13 +165,39 @@ casos retornam HTTP 404 com um corpo explicativo: `{"detail": "..."}`. Um pool
 cujo `sample_size` está abaixo de `LOW_CONFIDENCE_THRESHOLD` ainda retorna HTTP
 200, com `"confidence": "low"`.
 
+Campos de cada pool na resposta (`PoolResponse`/`PoolRankingResponse`, em
+[`api/schemas.py`](src/pool_selector/api/schemas.py)):
+
+| Campo | Tipo | Significado                                                                                                                                                                                                                                                                                                                                                        |
+| ----- | ---- |--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `pool_id` | string | Identificador bruto do pool, formato `pool-<instance_type>-<az>`                                                                                                                                                                                                                                                                                                   |
+| `instance_type` | string | Tipo de instância EC2 (ex: `r6.xlarge`)                                                                                                                                                                                                                                                                                                                            |
+| `az` | string | Availability Zone (ex: `us-east-1a`)                                                                                                                                                                                                                                                                                                                               |
+| `score` | float | `raw_score`: `1 - availability_failures/total_events` na janela de recência ativa. **Não** é o limite inferior de Wilson usado internamente para decidir a ordem do ranking, esse nunca aparece na resposta, só influencia em qual posição cada pool cai (veja [`docs/adr/0003-wilson-lower-bound-confidence.md`](docs/adr/0003-wilson-lower-bound-confidence.md)) |
+| `sample_size` | int | `total_events` na janela. Tamanho da amostra que sustenta o `score`                                                                                                                                                                                                                                                                                                |
+| `confidence` | `"low"` \| `"normal"` | `"low"` quando `sample_size < LOW_CONFIDENCE_THRESHOLD` (default `5`). É só um sinal, a resposta continua HTTP 200                                                                                                                                                                                                                                                 |
+| `window` | string | Descrição legível da `RecencyStrategy` ativa (ex: `"60m sliding"`)                                                                                                                                                                                                                                                                                                 |
+
 ## Testes
 
 ```bash
 make test
 ```
 
-equivalente a `uv run pytest --cov=src --cov-report=term-missing`.
+equivalente a `uv run pytest --cov=src --cov-report=term-missing`. Roda toda a
+suíte: `tests/unit/` + `tests/integration/`.
+
+- **`tests/unit/`** - testes unitários, sem I/O: `domain/` (modelos,
+  catálogo, classificação de reason, recência, scoring, selector),
+  `observability/` (logging) e `settings.py`.
+- **`tests/integration/`** - testes de integração, exercitando I/O real:
+  `api/` (rotas via `TestClient` do FastAPI, fim a fim), `ingestion/`
+  (parser + `LocalFileSource` + `S3Source` contra um S3 simulado via
+  `moto`) e `store/` (refresh em background assíncrono real contra o
+  `InMemoryStore`).
+
+Para rodar só um dos dois grupos: `uv run pytest tests/unit` ou
+`uv run pytest tests/integration`.
 
 ## Lint & checagem de tipos
 
@@ -167,7 +205,21 @@ equivalente a `uv run pytest --cov=src --cov-report=term-missing`.
 make lint
 ```
 
-equivalente a `uv run ruff check . && uv run ruff format --check . && uv run mypy src`.
+equivalente a `uv run ruff check . && uv run ruff format --check . && uv run mypy src`:
+
+- **`ruff check`** - lint. Regras habilitadas (`[tool.ruff.lint]` em
+  `pyproject.toml`): `E`/pycodestyle, `F`/pyflakes, `I`/isort (import
+  ordenados), `UP`/pyupgrade (sintaxe idiomática pra versão do Python do
+  projeto), `B`/bugbear (armadilhas comuns) e `SIM`/simplify.
+- **`ruff format --check`** - checa formatação (mesma ferramenta que
+  formata o código. Aqui só valida sem reescrever nada).
+- **`mypy src`** - checagem de tipos em modo `strict`
+  (`[tool.mypy]`), só sobre `src/`. Os arquivos em `tests/` não são
+  type-checked.
+
+O mesmo hook roda via `pre-commit` (veja
+[Configuração inicial](#configuração-inicial)) e é o gate usado no CI
+(veja [Estratégia de CI/CD](#estratégia-de-cicd)).
 
 ## Estratégia de CI/CD
 

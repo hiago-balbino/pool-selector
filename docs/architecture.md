@@ -72,3 +72,5 @@ ingestão.
 | `observability/logging.py` | Logging estruturado em JSON |
 | `settings.py` | Loader de configuração tipado (`pydantic-settings`) sobre `.env` |
 | `tools/generate_data.py` | Gerador determinístico de dados sintéticos em JSON (regras: [`docs/synthetic-data.md`](synthetic-data.md)) |
+| `tests/unit/` | Testes unitários: `domain/` (puro, sem I/O), `observability/`, `settings.py` |
+| `tests/integration/` | Testes de integração: `api/` (FastAPI `TestClient`), `ingestion/` (inclui `S3Source` via `moto`), `store/` (refresh assíncrono) |
